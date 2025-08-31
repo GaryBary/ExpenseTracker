@@ -1,23 +1,18 @@
-﻿services:
+services:
   - type: web
     name: expense-tracker-api
     env: python
     plan: free
-    buildCommand: pip install -r api/requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: expense-tracker-db
-          property: connectionString
+        sync: false
       - key: OCR_SPACE_API_KEY
         sync: false
       - key: APP_TZ
         value: Australia/Sydney
       - key: APP_CURRENCY
         value: AUD
-databases:
-  - name: expense-tracker-db
-    plan: free
