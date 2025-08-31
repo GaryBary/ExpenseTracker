@@ -1,9 +1,12 @@
-﻿import os
-from sqlalchemy import create_engine
+import os
+from sqlalchemy import create_engine, MetaData
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dev.db")
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, connect_args=connect_args)
+
+DB_SCHEMA = os.getenv("DB_SCHEMA", "et")
+metadata = MetaData(schema=DB_SCHEMA)
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
-Base = declarative_base()
+Base = declarative_base(metadata=metadata)
