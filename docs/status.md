@@ -1,4 +1,13 @@
-﻿- Phase: 0
-- Status: scaffolding
-- Next: push API skeleton, create Render service, add frontend scaffold
-- Risks: OCR accuracy variance; image size growth in DB
+- Phase: 0
+- Status: API deployed on Render; DB connected (External URL); schema isolation via `DB_SCHEMA=et`
+- Completed today:
+  - Repo scaffolded with FastAPI API
+  - Render Blueprint deployed; fixed driver (`postgresql+psycopg`) and DB URL
+  - Created schema-aware setup; verified via Swagger `/docs` and `/stats/fy`
+  - Added OCR parsing module `api/app/utils/parse_receipt.py`
+- Next:
+  - Wire parser into `api/app/main.py` to auto-fill fields from OCR
+  - Redeploy API
+  - Scaffold `frontend/` (camera/upload + dashboard) and set up GitHub Pages
+- Risks:
+  - OCR accuracy variability; free-tier DB limits
