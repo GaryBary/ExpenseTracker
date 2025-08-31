@@ -1,0 +1,4 @@
+﻿api/dev.db
+__pycache__/
+*.pyc
+.env
