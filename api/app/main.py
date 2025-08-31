@@ -94,4 +94,46 @@ def list_expenses(
         {
             "id": str(e.id),
             "date": e.date.isoformat() if e.date else None,
-            "amount_cents": e.amount_cents
+            "amount_cents": e.amount_cents,
+            "currency": e.currency,
+            "description": e.description,
+            "vendor": e.vendor,
+            "category": e.category,
+        }
+        for e in rows
+    ]
+
+@app.get("/expenses/{expense_id}")
+def get_expense(expense_id: str, db: Session = Depends(get_db)):
+    e = db.get(models.Expense, expense_id)
+    if not e:
+        raise HTTPException(404, "Not found")
+    return {
+        "id": str(e.id),
+        "date": e.date.isoformat() if e.date else None,
+        "amount_cents": e.amount_cents,
+        "currency": e.currency,
+        "description": e.description,
+        "vendor": e.vendor,
+        "category": e.category,
+        "ocr_text": e.ocr_text,
+    }
+
+@app.get("/stats/fy")
+def stats_fy(db: Session = Depends(get_db)):
+    today = datetime.now().date()
+    start, end, label = fy_range_for_date(today)
+    total = db.query(func.coalesce(func.sum(models.Expense.amount_cents), 0)).filter(
+        models.Expense.date >= start, models.Expense.date <= end
+    ).scalar() or 0
+    by_cat = (
+        db.query(models.Expense.category, func.coalesce(func.sum(models.Expense.amount_cents), 0))
+        .filter(models.Expense.date >= start, models.Expense.date <= end)
+        .group_by(models.Expense.category)
+        .all()
+    )
+    return {
+        "fy": label,
+        "total_cents": int(total),
+        "by_category": [{"category": c or "Uncategorized", "total_cents": int(s)} for c, s in by_cat],
+    }
