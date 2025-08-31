@@ -1,11 +1,12 @@
-﻿{
+{
   "project": "Expense Tracker (ET)",
   "phase": "0",
   "fy": { "start": "2025-07-01", "end": "2026-06-30", "label": "FY25/26" },
   "next_tasks": [
-    "Push API skeleton",
-    "Create Render service from render.yaml",
-    "Frontend scaffold + camera/upload"
+    "Wire parse_receipt into api/app/main.py and redeploy",
+    "Scaffold frontend (Vite React TS) with camera/upload",
+    "Dashboard: FY totals, by-category, list + detail",
+    "Reports endpoint: CSV for selected FY"
   ],
   "defaults": { "currency": "AUD", "tz": "Australia/Sydney" }
 }
