@@ -378,24 +378,20 @@
             </div>
             <form id="edit-form">
                 <div class="form-group">
-                    <label class="form-label" for="edit-vendor">Vendor</label>
-                    <input type="text" id="edit-vendor" class="form-input" required>
+                    <label class="form-label" for="edit-category">Category</label>
+                    <input type="text" id="edit-category" class="form-input" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="edit-description">Description</label>
-                    <input type="text" id="edit-description" class="form-input">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="edit-amount">Amount (AUD)</label>
-                    <input type="number" id="edit-amount" class="form-input" step="0.01" min="0" required>
+                    <input type="text" id="edit-description" class="form-input" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="edit-date">Date</label>
                     <input type="date" id="edit-date" class="form-input" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label" for="edit-category">Category</label>
-                    <input type="text" id="edit-category" class="form-input">
+                    <label class="form-label" for="edit-amount">Amount (AUD)</label>
+                    <input type="number" id="edit-amount" class="form-input" step="0.01" min="0" required>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
@@ -461,11 +457,11 @@
                         expenses.slice(0, 10).map(expense => `
                             <div class="expense-item">
                                 <div class="expense-main">
-                                    <div class="expense-vendor">${expense.vendor || expense.description || 'Unknown'}</div>
+                                    <div class="expense-vendor">${expense.category || 'Uncategorized'}</div>
                                     <div class="expense-amount">${formatCurrency(expense.amount_cents || 0)}</div>
                                 </div>
                                 <div style="font-size: 0.875rem; color: #6b7280;">
-                                    ${expense.date || 'No date'} ${expense.category ? `• ${expense.category}` : ''}
+                                    ${expense.description || 'No description'} • ${expense.date || 'No date'}
                                 </div>
                                 <div class="expense-actions">
                                     <button class="btn-edit" onclick="editExpense('${expense.id}')">Edit</button>
@@ -556,11 +552,10 @@ setTimeout(() => {
                 currentExpenseId = expenseId;
                 
                 // Populate form fields
-                document.getElementById('edit-vendor').value = currentExpense.vendor || '';
-                document.getElementById('edit-description').value = currentExpense.description || '';
-                document.getElementById('edit-amount').value = (currentExpense.amount_cents / 100).toFixed(2);
-                document.getElementById('edit-date').value = currentExpense.date || '';
                 document.getElementById('edit-category').value = currentExpense.category || '';
+                document.getElementById('edit-description').value = currentExpense.description || '';
+                document.getElementById('edit-date').value = currentExpense.date || '';
+                document.getElementById('edit-amount').value = (currentExpense.amount_cents / 100).toFixed(2);
                 
                 // Show modal
                 document.getElementById('edit-modal').classList.remove('hidden');
@@ -583,7 +578,7 @@ setTimeout(() => {
             currentExpense = null;
         }
 
-                // Handle edit form submission
+        // Handle edit form submission
         document.getElementById('edit-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -591,11 +586,10 @@ setTimeout(() => {
             
             try {
                 const updatedExpense = {
-                    vendor: document.getElementById('edit-vendor').value,
+                    category: document.getElementById('edit-category').value,
                     description: document.getElementById('edit-description').value,
-                    amount_cents: Math.round(parseFloat(document.getElementById('edit-amount').value) * 100),
                     date: document.getElementById('edit-date').value,
-                    category: document.getElementById('edit-category').value
+                    amount_cents: Math.round(parseFloat(document.getElementById('edit-amount').value) * 100)
                 };
                 
                 console.log('Submitting edit for expense:', currentExpenseId);
@@ -614,18 +608,16 @@ setTimeout(() => {
                     console.log('Old expense deleted successfully, creating new one...');
                     // Then create a new expense with the updated data
                     const formData = new FormData();
-                    formData.append('vendor', updatedExpense.vendor);
-                    formData.append('description', updatedExpense.description);
-                    formData.append('amount_cents', updatedExpense.amount_cents);
-                    formData.append('date', updatedExpense.date);
                     formData.append('category', updatedExpense.category);
+                    formData.append('description', updatedExpense.description);
+                    formData.append('date', updatedExpense.date);
+                    formData.append('amount_cents', updatedExpense.amount_cents);
                     
                     console.log('Creating new expense with data:', {
-                        vendor: updatedExpense.vendor,
+                        category: updatedExpense.category,
                         description: updatedExpense.description,
-                        amount_cents: updatedExpense.amount_cents,
                         date: updatedExpense.date,
-                        category: updatedExpense.category
+                        amount_cents: updatedExpense.amount_cents
                     });
                     
                     const createResponse = await fetch(`${API_BASE}/expenses`, {
@@ -677,9 +669,9 @@ setTimeout(() => {
                 // Show expense details in delete confirmation
                 const detailsDiv = document.getElementById('delete-expense-details');
                 detailsDiv.innerHTML = `
-                    <strong>${currentExpense.vendor || currentExpense.description || 'Unknown'}</strong><br>
-                    Date: ${currentExpense.date || 'No date'}<br>
-                    Category: ${currentExpense.category || 'Uncategorized'}
+                    <strong>${currentExpense.category || 'Uncategorized'}</strong><br>
+                    Description: ${currentExpense.description || 'No description'}<br>
+                    Date: ${currentExpense.date || 'No date'}
                 `;
                 
                 // Show delete modal
