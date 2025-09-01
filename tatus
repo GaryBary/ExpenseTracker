@@ -1,0 +1,5 @@
+[33m54346dc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add detailed console logging to debug Edit/Delete function execution
+[33mcfdd978[m Add debugging alerts to Edit/Delete functions to verify they're being called
+[33m2c8632e[m FIX: Connect Edit/Delete buttons to actual functions instead of test functions
+[33me79c3f6[m Add simple test functions to debug Edit/Delete button functionality
+[33m64753fe[m Add debugging and console logging to fix Edit/Delete button functionality
