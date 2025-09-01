@@ -165,7 +165,7 @@
         }
         
         .hidden {
-            display: none;
+            display: none !important;
         }
         
         /* Edit/Delete Button Styles */
@@ -369,7 +369,7 @@
     </div>
 
     <!-- Edit Expense Modal -->
-    <div id="edit-modal" class="modal hidden">
+    <div id="edit-modal" class="modal hidden" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Edit Expense</h2>
@@ -405,7 +405,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="delete-modal" class="modal hidden">
+    <div id="delete-modal" class="modal hidden" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Delete Expense</h2>
@@ -684,8 +684,16 @@ setTimeout(() => {
             }
         });
 
+        // Ensure modals are hidden on page load
+        function initializeModals() {
+            closeAllModals();
+        }
+
         // Load dashboard on page load
-        document.addEventListener('DOMContentLoaded', loadDashboard);
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeModals();
+            loadDashboard();
+        });
     </script>
 </body>
 </html>
