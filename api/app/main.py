@@ -173,6 +173,56 @@ def get_expense(expense_id: str, db: Session = Depends(get_db)):
         "ocr_text": e.ocr_text,
     }
 
+@app.put("/expenses/{expense_id}")
+def update_expense(
+    expense_id: str,
+    description: str | None = Form(default=None),
+    vendor: str | None = Form(default=None),
+    date: str | None = Form(default=None),  # YYYY-MM-DD
+    amount_cents: int | None = Form(default=None),
+    category: str | None = Form(default=None),
+    db: Session = Depends(get_db),
+):
+    expense = db.get(models.Expense, expense_id)
+    if not expense:
+        raise HTTPException(404, "Expense not found")
+    
+    # Update only provided fields
+    if description is not None:
+        expense.description = description
+    if vendor is not None:
+        expense.vendor = vendor
+    if date is not None:
+        expense.date = dtdate.fromisoformat(date)
+    if amount_cents is not None:
+        expense.amount_cents = amount_cents
+    if category is not None:
+        expense.category = category
+    
+    db.commit()
+    db.refresh(expense)
+    
+    return {
+        "id": str(expense.id),
+        "date": expense.date.isoformat() if expense.date else None,
+        "amount_cents": expense.amount_cents,
+        "currency": expense.currency,
+        "description": expense.description,
+        "vendor": expense.vendor,
+        "category": expense.category,
+    }
+
+@app.delete("/expenses/{expense_id}")
+def delete_expense(expense_id: str, db: Session = Depends(get_db)):
+    expense = db.get(models.Expense, expense_id)
+    if not expense:
+        raise HTTPException(404, "Expense not found")
+    
+    db.delete(expense)
+    db.commit()
+    
+    return {"message": "Expense deleted successfully"}
+
 @app.get("/stats/fy")
 def stats_fy(db: Session = Depends(get_db)):
     today = datetime.now().date()
