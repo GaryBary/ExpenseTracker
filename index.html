@@ -289,10 +289,11 @@
                     messageDiv.innerHTML = `<div class="message success">✅ Expense created successfully! ID: ${result.id}</div>`;
                     fileInput.value = '';
                     
-                    // Refresh dashboard
-                    setTimeout(() => {
-                        showDashboard();
-                    }, 2000);
+                    // Refresh dashboard with delay to ensure data is processed
+setTimeout(() => {
+    loadDashboard();
+    showDashboard();
+}, 3000);
                 } else {
                     const error = await response.text();
                     messageDiv.innerHTML = `<div class="message error">❌ Upload failed: ${error}</div>`;
