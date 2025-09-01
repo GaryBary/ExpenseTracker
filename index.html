@@ -540,6 +540,7 @@ setTimeout(() => {
 
         // Edit expense functions
         async function editExpense(expenseId) {
+            alert('Edit function called for expense: ' + expenseId);
             console.log('Edit expense called with ID:', expenseId);
             try {
                 // Close any open modals first
@@ -609,6 +610,7 @@ setTimeout(() => {
 
         // Delete expense functions
         async function deleteExpense(expenseId) {
+            alert('Delete function called for expense: ' + expenseId);
             console.log('Delete expense called with ID:', expenseId);
             try {
                 // Close any open modals first
