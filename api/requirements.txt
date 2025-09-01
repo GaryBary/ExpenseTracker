@@ -1,7 +1,8 @@
-﻿fastapi
+fastapi
 uvicorn[standard]
-SQLAlchemy>=2.0
+sqlalchemy
 psycopg[binary]
 python-multipart
 requests
 pytz
+pillow
