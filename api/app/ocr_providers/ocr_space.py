@@ -15,8 +15,8 @@ def ocr_space_image(image_bytes: bytes, api_key: str) -> str:
         resp.raise_for_status()
         data = resp.json()
         
-        # Check for OCR.space API errors
-        if not data.get("IsErroredOnProcessing", True):
+        # Check for OCR.space API errors - FIXED LOGIC
+        if data.get("IsErroredOnProcessing", True):
             logger.error(f"OCR.space processing error: {data}")
             return ""
             
@@ -29,6 +29,8 @@ def ocr_space_image(image_bytes: bytes, api_key: str) -> str:
         
         if not result:
             logger.warning(f"OCR returned empty text. Full response: {data}")
+        else:
+            logger.info(f"OCR successful, extracted {len(result)} characters")
             
         return result
         
