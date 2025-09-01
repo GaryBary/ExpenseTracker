@@ -370,7 +370,7 @@
     </div>
 
     <!-- Edit Expense Modal -->
-    <div id="edit-modal" class="modal hidden" style="display: none;">
+    <div id="edit-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Edit Expense</h2>
@@ -406,7 +406,7 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div id="delete-modal" class="modal hidden" style="display: none;">
+    <div id="delete-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 class="modal-title">Delete Expense</h2>
@@ -540,8 +540,6 @@ setTimeout(() => {
 
         // Edit expense functions
         async function editExpense(expenseId) {
-            alert('Edit function called for expense: ' + expenseId);
-            console.log('Edit expense called with ID:', expenseId);
             try {
                 // Close any open modals first
                 closeAllModals();
@@ -592,26 +590,39 @@ setTimeout(() => {
             if (!currentExpenseId) return;
             
             try {
-                // Update the expense locally
-                currentExpense.vendor = document.getElementById('edit-vendor').value;
-                currentExpense.description = document.getElementById('edit-description').value;
-                currentExpense.amount_cents = Math.round(parseFloat(document.getElementById('edit-amount').value) * 100);
-                currentExpense.date = document.getElementById('edit-date').value;
-                currentExpense.category = document.getElementById('edit-category').value;
+                const updatedExpense = {
+                    vendor: document.getElementById('edit-vendor').value,
+                    description: document.getElementById('edit-description').value,
+                    amount_cents: Math.round(parseFloat(document.getElementById('edit-amount').value) * 100),
+                    date: document.getElementById('edit-date').value,
+                    category: document.getElementById('edit-category').value
+                };
                 
-                closeEditModal();
-                loadDashboard(); // Refresh the dashboard
-                alert('Expense updated successfully!');
+                // Call the API to update the expense
+                const response = await fetch(`${API_BASE}/expenses/${currentExpenseId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updatedExpense)
+                });
+                
+                if (response.ok) {
+                    closeEditModal();
+                    loadDashboard(); // Refresh the dashboard
+                    alert('Expense updated successfully!');
+                } else {
+                    const error = await response.text();
+                    alert(`Failed to update expense: ${error}`);
+                }
             } catch (error) {
                 console.error('Error updating expense:', error);
-                alert('Failed to update expense');
+                alert('Failed to update expense: ' + error.message);
             }
         });
 
         // Delete expense functions
         async function deleteExpense(expenseId) {
-            alert('Delete function called for expense: ' + expenseId);
-            console.log('Delete expense called with ID:', expenseId);
             try {
                 // Close any open modals first
                 closeAllModals();
@@ -653,14 +664,22 @@ setTimeout(() => {
             if (!currentExpenseId) return;
             
             try {
-                // For now, just close the modal and refresh - the expense will still be there
-                // until we implement the actual delete API endpoint
-                closeDeleteModal();
-                loadDashboard(); // Refresh the dashboard
-                alert('Delete functionality will be fully implemented when the API endpoint is ready. For now, the expense remains in the list.');
+                // Call the API to delete the expense
+                const response = await fetch(`${API_BASE}/expenses/${currentExpenseId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    closeDeleteModal();
+                    loadDashboard(); // Refresh the dashboard
+                    alert('Expense deleted successfully!');
+                } else {
+                    const error = await response.text();
+                    alert(`Failed to delete expense: ${error}`);
+                }
             } catch (error) {
                 console.error('Error deleting expense:', error);
-                alert('Failed to delete expense');
+                alert('Failed to delete expense: ' + error.message);
             }
         }
 
@@ -680,23 +699,6 @@ setTimeout(() => {
         // Ensure modals are hidden on page load
         function initializeModals() {
             closeAllModals();
-        }
-
-        // Test function to verify JavaScript is working
-        function testButtons() {
-            console.log('Test function called - JavaScript is working!');
-            alert('JavaScript is working! Edit/Delete functions should be available.');
-        }
-
-        // Simple test functions to verify basic functionality
-        function simpleEditTest() {
-            alert('Edit button clicked! Function is working.');
-            console.log('Simple edit test function called');
-        }
-
-        function simpleDeleteTest() {
-            alert('Delete button clicked! Function is working.');
-            console.log('Simple delete test function called');
         }
 
         // Load dashboard on page load
