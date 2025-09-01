@@ -355,7 +355,9 @@
             <div style="margin-top: 1rem; padding: 1rem; background: #f0f9ff; border-radius: 6px; border: 1px solid #0ea5e9;">
                 <p style="margin-bottom: 0.5rem; color: #0369a1;"><strong>Debug Test:</strong></p>
                 <button onclick="testButtons()" style="background: #0ea5e9; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Test JavaScript</button>
-                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #0369a1;">Click this to test if JavaScript is working. If you see an alert, the Edit/Delete functions should work.</p>
+                <button onclick="simpleEditTest()" style="background: #10b981; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 0.5rem;">Test Edit Function</button>
+                <button onclick="simpleDeleteTest()" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 0.5rem;">Test Delete Function</button>
+                <p style="margin-top: 0.5rem; font-size: 0.875rem; color: #0369a1;">Click these buttons to test if JavaScript functions are working. If you see alerts, the Edit/Delete functions should work.</p>
             </div>
         </div>
 
@@ -472,8 +474,8 @@
                                     ${expense.date || 'No date'} ${expense.category ? `• ${expense.category}` : ''}
                                 </div>
                                 <div class="expense-actions">
-                                    <button class="btn-edit" onclick="editExpense('${expense.id}')">Edit</button>
-                                    <button class="btn-delete" onclick="deleteExpense('${expense.id}')">Delete</button>
+                                    <button class="btn-edit" onclick="simpleEditTest()">Edit</button>
+                                    <button class="btn-delete" onclick="simpleDeleteTest()">Delete</button>
                                 </div>
                             </div>
                         `).join('') + '</div>';
@@ -701,6 +703,17 @@ setTimeout(() => {
         function testButtons() {
             console.log('Test function called - JavaScript is working!');
             alert('JavaScript is working! Edit/Delete functions should be available.');
+        }
+
+        // Simple test functions to verify basic functionality
+        function simpleEditTest() {
+            alert('Edit button clicked! Function is working.');
+            console.log('Simple edit test function called');
+        }
+
+        function simpleDeleteTest() {
+            alert('Delete button clicked! Function is working.');
+            console.log('Simple delete test function called');
         }
 
         // Load dashboard on page load
