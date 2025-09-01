@@ -583,7 +583,7 @@ setTimeout(() => {
             currentExpense = null;
         }
 
-        // Handle edit form submission
+                // Handle edit form submission
         document.getElementById('edit-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -598,22 +598,58 @@ setTimeout(() => {
                     category: document.getElementById('edit-category').value
                 };
                 
-                // Call the API to update the expense
-                const response = await fetch(`${API_BASE}/expenses/${currentExpenseId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(updatedExpense)
+                console.log('Submitting edit for expense:', currentExpenseId);
+                console.log('Updated data:', updatedExpense);
+                
+                // Since the API might not support PUT/PATCH, let's try a different approach
+                // First, try to delete the old expense
+                console.log('Attempting to delete old expense:', currentExpenseId);
+                const deleteResponse = await fetch(`${API_BASE}/expenses/${currentExpenseId}`, {
+                    method: 'DELETE'
                 });
                 
-                if (response.ok) {
-                    closeEditModal();
-                    loadDashboard(); // Refresh the dashboard
-                    alert('Expense updated successfully!');
+                console.log('Delete response status:', deleteResponse.status);
+                
+                if (deleteResponse.ok) {
+                    console.log('Old expense deleted successfully, creating new one...');
+                    // Then create a new expense with the updated data
+                    const formData = new FormData();
+                    formData.append('vendor', updatedExpense.vendor);
+                    formData.append('description', updatedExpense.description);
+                    formData.append('amount_cents', updatedExpense.amount_cents);
+                    formData.append('date', updatedExpense.date);
+                    formData.append('category', updatedExpense.category);
+                    
+                    console.log('Creating new expense with data:', {
+                        vendor: updatedExpense.vendor,
+                        description: updatedExpense.description,
+                        amount_cents: updatedExpense.amount_cents,
+                        date: updatedExpense.date,
+                        category: updatedExpense.category
+                    });
+                    
+                    const createResponse = await fetch(`${API_BASE}/expenses`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    console.log('Create response status:', createResponse.status);
+                    
+                    if (createResponse.ok) {
+                        const result = await createResponse.json();
+                        console.log('Update successful via delete+create:', result);
+                        closeEditModal();
+                        loadDashboard(); // Refresh the dashboard
+                        alert('Expense updated successfully!');
+                    } else {
+                        const error = await createResponse.text();
+                        console.error('Create failed:', error);
+                        alert(`Failed to create updated expense: ${error}`);
+                    }
                 } else {
-                    const error = await response.text();
-                    alert(`Failed to update expense: ${error}`);
+                    const error = await deleteResponse.text();
+                    console.error('Delete failed:', error);
+                    alert(`Failed to delete old expense: ${error}`);
                 }
             } catch (error) {
                 console.error('Error updating expense:', error);
@@ -700,6 +736,8 @@ setTimeout(() => {
         function initializeModals() {
             closeAllModals();
         }
+
+
 
         // Load dashboard on page load
         document.addEventListener('DOMContentLoaded', function() {
