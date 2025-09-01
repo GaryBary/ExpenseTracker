@@ -541,20 +541,24 @@ setTimeout(() => {
         // Edit expense functions
         async function editExpense(expenseId) {
             console.log('Edit expense called with ID:', expenseId);
-            alert('Edit function called for expense: ' + expenseId);
             try {
                 // Close any open modals first
                 closeAllModals();
                 
+                console.log('Fetching expense from API...');
                 const response = await fetch(`${API_BASE}/expenses/${expenseId}`);
+                console.log('API response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('Failed to fetch expense');
+                    throw new Error(`Failed to fetch expense: ${response.status} ${response.statusText}`);
                 }
                 
                 currentExpense = await response.json();
+                console.log('Expense data received:', currentExpense);
                 currentExpenseId = expenseId;
                 
                 // Populate form fields
+                console.log('Populating form fields...');
                 document.getElementById('edit-vendor').value = currentExpense.vendor || '';
                 document.getElementById('edit-description').value = currentExpense.description || '';
                 document.getElementById('edit-amount').value = (currentExpense.amount_cents / 100).toFixed(2);
@@ -562,6 +566,7 @@ setTimeout(() => {
                 document.getElementById('edit-category').value = currentExpense.category || '';
                 
                 // Show modal
+                console.log('Showing edit modal...');
                 document.getElementById('edit-modal').classList.remove('hidden');
                 console.log('Edit modal should now be visible');
             } catch (error) {
@@ -619,20 +624,24 @@ setTimeout(() => {
         // Delete expense functions
         async function deleteExpense(expenseId) {
             console.log('Delete expense called with ID:', expenseId);
-            alert('Delete function called for expense: ' + expenseId);
             try {
                 // Close any open modals first
                 closeAllModals();
                 
+                console.log('Fetching expense for delete confirmation...');
                 const response = await fetch(`${API_BASE}/expenses/${expenseId}`);
+                console.log('Delete API response status:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error('Failed to fetch expense');
+                    throw new Error(`Failed to fetch expense: ${response.status} ${response.statusText}`);
                 }
                 
                 currentExpense = await response.json();
+                console.log('Delete expense data received:', currentExpense);
                 currentExpenseId = expenseId;
                 
                 // Show expense details in delete confirmation
+                console.log('Populating delete confirmation...');
                 const detailsDiv = document.getElementById('delete-expense-details');
                 detailsDiv.innerHTML = `
                     <strong>${currentExpense.vendor || currentExpense.description || 'Unknown'}</strong><br>
@@ -641,6 +650,7 @@ setTimeout(() => {
                 `;
                 
                 // Show delete modal
+                console.log('Showing delete modal...');
                 document.getElementById('delete-modal').classList.remove('hidden');
                 console.log('Delete modal should now be visible');
             } catch (error) {
