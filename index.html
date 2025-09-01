@@ -1,10 +1,319 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta http-equiv="refresh" content="0; url=./frontend/dist/index.html">
-    <title>Redirecting...</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .nav h1 {
+            color: #2563eb;
+            font-size: 1.5rem;
+        }
+        
+        .nav-links {
+            margin-top: 1rem;
+        }
+        
+        .nav-link {
+            margin-right: 2rem;
+            padding: 0.5rem 1rem;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+        
+        .nav-link:hover {
+            background: #1d4ed8;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .page {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.875rem;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+        }
+        
+        .total-card {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .total-amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .upload-section {
+            margin-bottom: 2rem;
+        }
+        
+        .file-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 6px;
+            background: #f9fafb;
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+        }
+        
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .expense-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .expense-item {
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+        }
+        
+        .expense-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .expense-vendor {
+            font-weight: 500;
+        }
+        
+        .expense-amount {
+            font-weight: 600;
+            color: #059669;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <p>Redirecting to Expense Tracker...</p>
+    <nav class="nav">
+        <h1>Expense Tracker</h1>
+        <div class="nav-links">
+            <button class="nav-link" onclick="showDashboard()">Dashboard</button>
+            <button class="nav-link" onclick="showCapture()">Add Expense</button>
+            <a href="https://expense-tracker-api-23b3.onrender.com/docs" class="nav-link" target="_blank">API Docs</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Dashboard Page -->
+        <div id="dashboard-page" class="page">
+            <h1 class="page-title">Dashboard</h1>
+            <div class="total-card">
+                <div class="total-amount" id="total-amount">$0.00</div>
+                <div>Total Expenses (FY25/26)</div>
+            </div>
+            <div id="expenses-list">
+                <p>Loading expenses...</p>
+            </div>
+        </div>
+
+        <!-- Capture Page -->
+        <div id="capture-page" class="page hidden">
+            <h1 class="page-title">Add Expense</h1>
+            <div class="upload-section">
+                <h3>Upload Receipt</h3>
+                <input type="file" id="file-input" class="file-input" accept="image/*">
+                <button id="upload-btn" class="btn" onclick="uploadReceipt()">
+                    📷 Upload & Process Receipt
+                </button>
+                <div id="upload-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://expense-tracker-api-23b3.onrender.com';
+
+        // Navigation
+        function showDashboard() {
+            document.getElementById('dashboard-page').classList.remove('hidden');
+            document.getElementById('capture-page').classList.add('hidden');
+            loadDashboard();
+        }
+
+        function showCapture() {
+            document.getElementById('dashboard-page').classList.add('hidden');
+            document.getElementById('capture-page').classList.remove('hidden');
+        }
+
+        // Load dashboard data
+        async function loadDashboard() {
+            try {
+                // Load FY stats
+                const statsResponse = await fetch(`${API_BASE}/stats/fy`);
+                const stats = await statsResponse.json();
+                
+                const totalAmount = stats.total_cents / 100;
+                document.getElementById('total-amount').textContent = 
+                    new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(totalAmount);
+
+                // Load recent expenses
+                const expensesResponse = await fetch(`${API_BASE}/expenses`);
+                const expenses = await expensesResponse.json();
+                
+                const expensesList = document.getElementById('expenses-list');
+                if (expenses.length === 0) {
+                    expensesList.innerHTML = '<p>No expenses yet. <a href="javascript:showCapture()">Add your first expense!</a></p>';
+                } else {
+                    expensesList.innerHTML = '<h3>Recent Expenses</h3><div class="expense-list">' +
+                        expenses.slice(0, 10).map(expense => `
+                            <div class="expense-item">
+                                <div class="expense-main">
+                                    <div class="expense-vendor">${expense.vendor || expense.description || 'Unknown'}</div>
+                                    <div class="expense-amount">${formatCurrency(expense.amount_cents || 0)}</div>
+                                </div>
+                                <div style="font-size: 0.875rem; color: #6b7280;">
+                                    ${expense.date || 'No date'} ${expense.category ? `• ${expense.category}` : ''}
+                                </div>
+                            </div>
+                        `).join('') + '</div>';
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('expenses-list').innerHTML = 
+                    '<p style="color: #991b1b;">Error connecting to API. Please check that your API is running.</p>';
+            }
+        }
+
+        // Upload receipt
+        async function uploadReceipt() {
+            const fileInput = document.getElementById('file-input');
+            const uploadBtn = document.getElementById('upload-btn');
+            const messageDiv = document.getElementById('upload-message');
+            
+            if (!fileInput.files[0]) {
+                messageDiv.innerHTML = '<div class="message error">Please select an image file</div>';
+                return;
+            }
+
+            uploadBtn.textContent = '⏳ Processing...';
+            uploadBtn.disabled = true;
+            messageDiv.innerHTML = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('image', fileInput.files[0]);
+
+                const response = await fetch(`${API_BASE}/expenses`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    messageDiv.innerHTML = `<div class="message success">✅ Expense created successfully! ID: ${result.id}</div>`;
+                    fileInput.value = '';
+                    
+                    // Refresh dashboard
+                    setTimeout(() => {
+                        showDashboard();
+                    }, 2000);
+                } else {
+                    const error = await response.text();
+                    messageDiv.innerHTML = `<div class="message error">❌ Upload failed: ${error}</div>`;
+                }
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="message error">❌ Upload failed: ${error.message}</div>`;
+            } finally {
+                uploadBtn.textContent = '📷 Upload & Process Receipt';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function formatCurrency(cents) {
+            return new Intl.NumberFormat('en-AU', { 
+                style: 'currency', 
+                currency: 'AUD' 
+            }).format(cents / 100);
+        }
+
+        // Load dashboard on page load
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
 </body>
 </html>
