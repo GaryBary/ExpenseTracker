@@ -540,6 +540,9 @@ setTimeout(() => {
         // Edit expense functions
         async function editExpense(expenseId) {
             try {
+                // Close any open modals first
+                closeAllModals();
+                
                 const response = await fetch(`${API_BASE}/expenses/${expenseId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch expense');
@@ -565,6 +568,13 @@ setTimeout(() => {
 
         function closeEditModal() {
             document.getElementById('edit-modal').classList.add('hidden');
+            currentExpenseId = null;
+            currentExpense = null;
+        }
+
+        function closeAllModals() {
+            document.getElementById('edit-modal').classList.add('hidden');
+            document.getElementById('delete-modal').classList.add('hidden');
             currentExpenseId = null;
             currentExpense = null;
         }
@@ -605,6 +615,9 @@ setTimeout(() => {
         // Delete expense functions
         async function deleteExpense(expenseId) {
             try {
+                // Close any open modals first
+                closeAllModals();
+                
                 const response = await fetch(`${API_BASE}/expenses/${expenseId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch expense');
@@ -657,6 +670,19 @@ setTimeout(() => {
                 alert('Failed to delete expense');
             }
         }
+
+        // Close modals when clicking outside or pressing escape
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                closeAllModals();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeAllModals();
+            }
+        });
 
         // Load dashboard on page load
         document.addEventListener('DOMContentLoaded', loadDashboard);
