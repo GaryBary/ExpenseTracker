@@ -16,7 +16,7 @@ interface FYStats {
   by_category: Array<{category: string, total_cents: number}>
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://expense-tracker-api-23b3.onrender.com'
 
 function Dashboard() {
   const [stats, setStats] = useState<FYStats | null>(null)
