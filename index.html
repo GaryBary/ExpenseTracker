@@ -329,6 +329,11 @@
             margin-bottom: 1rem;
             font-size: 0.875rem;
         }
+
+        .category-total {
+            color: #059669;
+            font-weight: 700;
+        }
         
         /* Sort Controls */
         .sort-controls {
@@ -384,6 +389,99 @@
             color: #059669;
             font-weight: 700;
         }
+        
+        /* Camera Capture Styles */
+        .capture-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .capture-section h3 {
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .capture-options {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .capture-btn {
+            background: #059669;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .capture-btn:hover {
+            background: #047857;
+        }
+        
+        .capture-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .camera-container {
+            display: none;
+            margin-top: 1rem;
+        }
+        
+        .camera-container.active {
+            display: block;
+        }
+        
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #000;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            object-fit: cover;
+        }
+        
+        .camera-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .capture-photo-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .capture-photo-btn:hover {
+            background: #dc2626;
+        }
+        
+        .capture-photo-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .camera-status {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
     </style>
 </head>
 <body>
@@ -425,6 +523,8 @@
         <!-- Capture Page -->
         <div id="capture-page" class="page hidden">
             <h1 class="page-title">Add Expense</h1>
+            
+            <!-- Upload Section -->
             <div class="upload-section">
                 <h3>Upload Receipt</h3>
                 <input type="file" id="file-input" class="file-input" accept="image/*">
@@ -432,6 +532,29 @@
                     📷 Upload & Process Receipt
                 </button>
                 <div id="upload-message"></div>
+            </div>
+            
+            <!-- Camera Capture Section -->
+            <div class="capture-section">
+                <h3>Take Photo</h3>
+                <div class="capture-options">
+                    <button id="start-camera-btn" class="capture-btn" onclick="startCamera()">
+                        📹 Start Camera
+                    </button>
+                    <button id="stop-camera-btn" class="capture-btn" onclick="stopCamera()" style="display: none;">
+                        ⏹️ Stop Camera
+                    </button>
+                </div>
+                
+                <div id="camera-container" class="camera-container">
+                    <video id="camera-preview" class="camera-preview" autoplay playsinline></video>
+                    <div class="camera-controls">
+                        <button id="capture-photo-btn" class="capture-photo-btn" onclick="capturePhoto()" disabled>
+                            📸 Take Photo
+                        </button>
+                        <div class="camera-status" id="camera-status">Camera not started</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -712,6 +835,10 @@ setTimeout(() => {
         let currentExpense = null;
         let allExpenses = [];
         let currentSort = 'date-desc';
+        
+        // Camera variables
+        let stream = null;
+        let capturedImage = null;
 
         // Edit expense functions
         async function editExpense(expenseId) {
@@ -904,7 +1031,106 @@ setTimeout(() => {
             closeAllModals();
         }
 
-
+        // Camera functions
+        async function startCamera() {
+            try {
+                const statusDiv = document.getElementById('camera-status');
+                statusDiv.textContent = 'Starting camera...';
+                
+                // Request camera access
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment', // Use back camera if available
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                const video = document.getElementById('camera-preview');
+                video.srcObject = stream;
+                
+                // Show camera interface
+                document.getElementById('camera-container').classList.add('active');
+                document.getElementById('start-camera-btn').style.display = 'none';
+                document.getElementById('stop-camera-btn').style.display = 'inline-flex';
+                document.getElementById('capture-photo-btn').disabled = false;
+                
+                statusDiv.textContent = 'Camera ready - Click "Take Photo" to capture';
+                
+            } catch (error) {
+                console.error('Error starting camera:', error);
+                document.getElementById('camera-status').textContent = 'Camera access denied or not available';
+                alert('Unable to access camera. Please check permissions or try uploading a file instead.');
+            }
+        }
+        
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            const video = document.getElementById('camera-preview');
+            video.srcObject = null;
+            
+            // Hide camera interface
+            document.getElementById('camera-container').classList.remove('active');
+            document.getElementById('start-camera-btn').style.display = 'inline-flex';
+            document.getElementById('stop-camera-btn').style.display = 'none';
+            document.getElementById('capture-photo-btn').disabled = true;
+            document.getElementById('camera-status').textContent = 'Camera not started';
+            
+            // Clear captured image
+            capturedImage = null;
+        }
+        
+        function capturePhoto() {
+            try {
+                const video = document.getElementById('camera-preview');
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                // Set canvas size to match video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                // Draw video frame to canvas
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to blob
+                canvas.toBlob(function(blob) {
+                    capturedImage = blob;
+                    
+                    // Create a file from the blob
+                    const file = new File([blob], 'captured-receipt.jpg', { type: 'image/jpeg' });
+                    
+                    // Set the file input
+                    const fileInput = document.getElementById('file-input');
+                    fileInput.files = new FileList([file]);
+                    
+                    // Update status
+                    document.getElementById('camera-status').textContent = 'Photo captured! Ready to upload.';
+                    
+                    // Stop camera after capture
+                    stopCamera();
+                    
+                    // Show success message
+                    alert('Photo captured successfully! Click "Upload & Process Receipt" to process it.');
+                    
+                }, 'image/jpeg', 0.8);
+                
+            } catch (error) {
+                console.error('Error capturing photo:', error);
+                alert('Failed to capture photo. Please try again.');
+            }
+        }
+        
+        // Helper function to create FileList (since it's read-only)
+        function FileList(items) {
+            const dataTransfer = new DataTransfer();
+            items.forEach(item => dataTransfer.items.add(item));
+            return dataTransfer.files;
+        }
 
         // Load dashboard on page load
         document.addEventListener('DOMContentLoaded', function() {
