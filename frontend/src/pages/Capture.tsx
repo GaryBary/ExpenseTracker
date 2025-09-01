@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://expense-tracker-api-23b3.onrender.com'
 
 function Capture() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
