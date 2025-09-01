@@ -609,6 +609,52 @@
         </div>
     </div>
 
+    <!-- Manual Entry Modal -->
+    <div id="manual-entry-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Add Expense Details</h2>
+                <button class="close-btn" onclick="closeManualEntryModal()">&times;</button>
+            </div>
+            <form id="manual-entry-form">
+                <div class="form-group">
+                    <label class="form-label" for="manual-category">Category</label>
+                    <select id="manual-category" class="form-input" required>
+                        <option value="">Select a category</option>
+                        <option value="Food & Dining">Food & Dining</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Taxi">Taxi</option>
+                        <option value="Uber">Uber</option>
+                        <option value="Public Transport">Public Transport</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Business">Business</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manual-description">Description</label>
+                    <input type="text" id="manual-description" class="form-input" placeholder="e.g., Lunch at restaurant" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manual-date">Date</label>
+                    <input type="date" id="manual-date" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="manual-amount">Amount (AUD)</label>
+                    <input type="number" id="manual-amount" class="form-input" step="0.01" min="0" placeholder="0.00" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeManualEntryModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create Expense</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_BASE = 'https://expense-tracker-api-23b3.onrender.com';
 
@@ -777,10 +823,9 @@
             displayExpenses();
         }
 
-        // Upload receipt
+        // Upload receipt - now opens manual entry modal
         async function uploadReceipt() {
             const fileInput = document.getElementById('file-input');
-            const uploadBtn = document.getElementById('upload-btn');
             const messageDiv = document.getElementById('upload-message');
             
             if (!fileInput.files[0]) {
@@ -788,39 +833,15 @@
                 return;
             }
 
-            uploadBtn.textContent = '⏳ Processing...';
-            uploadBtn.disabled = true;
+            // Store the file for later processing
+            window.selectedFile = fileInput.files[0];
+            
+            // Open manual entry modal
+            openManualEntryModal();
+            
+            // Clear the file input
+            fileInput.value = '';
             messageDiv.innerHTML = '';
-
-            try {
-                const formData = new FormData();
-                formData.append('image', fileInput.files[0]);
-
-                const response = await fetch(`${API_BASE}/expenses`, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    messageDiv.innerHTML = `<div class="message success">✅ Expense created successfully! ID: ${result.id}</div>`;
-                    fileInput.value = '';
-                    
-                    // Refresh dashboard with delay to ensure data is processed
-setTimeout(() => {
-    loadDashboard();
-    showDashboard();
-}, 3000);
-                } else {
-                    const error = await response.text();
-                    messageDiv.innerHTML = `<div class="message error">❌ Upload failed: ${error}</div>`;
-                }
-            } catch (error) {
-                messageDiv.innerHTML = `<div class="message error">❌ Upload failed: ${error.message}</div>`;
-            } finally {
-                uploadBtn.textContent = '📷 Upload & Process Receipt';
-                uploadBtn.disabled = false;
-            }
         }
 
         function formatCurrency(cents) {
@@ -878,6 +899,7 @@ setTimeout(() => {
         function closeAllModals() {
             document.getElementById('edit-modal').classList.add('hidden');
             document.getElementById('delete-modal').classList.add('hidden');
+            document.getElementById('manual-entry-modal').classList.add('hidden');
             currentExpenseId = null;
             currentExpense = null;
         }
@@ -1031,6 +1053,60 @@ setTimeout(() => {
             closeAllModals();
         }
 
+        // Manual entry modal functions
+        function openManualEntryModal() {
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('manual-date').value = today;
+            
+            // Show the modal
+            document.getElementById('manual-entry-modal').classList.remove('hidden');
+        }
+
+        function closeManualEntryModal() {
+            document.getElementById('manual-entry-modal').classList.add('hidden');
+            window.selectedFile = null;
+        }
+
+        // Handle manual entry form submission
+        document.getElementById('manual-entry-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            
+            // Add the image file if available
+            if (window.selectedFile) {
+                formData.append('image', window.selectedFile);
+            }
+            
+            // Add manual entry data
+            formData.append('category', document.getElementById('manual-category').value);
+            formData.append('description', document.getElementById('manual-description').value);
+            formData.append('date', document.getElementById('manual-date').value);
+            formData.append('amount_cents', Math.round(parseFloat(document.getElementById('manual-amount').value) * 100));
+
+            try {
+                const response = await fetch(`${API_BASE}/expenses`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    closeManualEntryModal();
+                    loadDashboard();
+                    showDashboard();
+                    alert('Expense created successfully!');
+                } else {
+                    const error = await response.text();
+                    alert(`Failed to create expense: ${error}`);
+                }
+            } catch (error) {
+                console.error('Error creating expense:', error);
+                alert('Failed to create expense: ' + error.message);
+            }
+        });
+
         // Camera functions
         async function startCamera() {
             try {
@@ -1104,18 +1180,17 @@ setTimeout(() => {
                     // Create a file from the blob
                     const file = new File([blob], 'captured-receipt.jpg', { type: 'image/jpeg' });
                     
-                    // Set the file input
-                    const fileInput = document.getElementById('file-input');
-                    fileInput.files = new FileList([file]);
-                    
-                    // Update status
-                    document.getElementById('camera-status').textContent = 'Photo captured! Ready to upload.';
+                    // Store the file for later processing
+                    window.selectedFile = file;
                     
                     // Stop camera after capture
                     stopCamera();
                     
+                    // Open manual entry modal
+                    openManualEntryModal();
+                    
                     // Show success message
-                    alert('Photo captured successfully! Click "Upload & Process Receipt" to process it.');
+                    alert('Photo captured successfully! Please fill in the expense details.');
                     
                 }, 'image/jpeg', 0.8);
                 
